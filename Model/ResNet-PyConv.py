@@ -1,5 +1,5 @@
 import sys
-
+from keras.utils import plot_model
 from keras import Input, Model
 from keras.layers import Conv2D, BatchNormalization, ReLU, Concatenate, Add, MaxPooling2D, GlobalAveragePooling2D, Dense
 from tensorflow import Tensor
@@ -315,15 +315,7 @@ def PyResNet():
     return model
 
 if __name__ == '__main__':
-    i = Input((224, 224, 3))
-    x = stage_0(i)
-    x = mkstages(x)
-    out = classifiaction_stage(x,1000)
-
-    # py_out = py_stages(input=x)
-    # stage_3_out = stage_3(py_out)
-    # gap = GlobalAveragePooling2D()(stage_3_out)
-    # out = Dense(6,activation='softmax')(gap)
-    model = Model(inputs=i, outputs=out)
+    model = PyResNet()
+    plot_model(model=model, to_file="./Model_structure.jpg", show_shapes=True)
     model.summary()
     sys.exit()

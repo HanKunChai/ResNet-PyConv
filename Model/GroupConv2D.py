@@ -6,10 +6,7 @@ from keras import backend as K
 from keras.layers import Conv2D, Layer
 from keras import initializers, regularizers
 
-'''
-https://openaccess.thecvf.com/content_cvpr_2017/papers/Xie_Aggregated_Residual_Transformations_CVPR_2017_paper.pdf
-Aggregated Residual Transformations for Deep Neural Networks
-'''
+
 
 
 class GroupConv2D(Layer):
