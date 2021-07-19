@@ -306,6 +306,14 @@ def classifiaction_stage(input:Tensor,classes_num:int):
     return softmax
 
 
+def PyResNet():
+    i = Input((224, 224, 3))
+    x = stage_0(i)
+    x = mkstages(x)
+    out = classifiaction_stage(x, 1000)
+    model = Model(inputs=i, outputs=out)
+    return model
+
 if __name__ == '__main__':
     i = Input((224, 224, 3))
     x = stage_0(i)
