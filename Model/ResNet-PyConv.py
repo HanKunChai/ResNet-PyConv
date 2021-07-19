@@ -3,7 +3,6 @@ from keras.utils import plot_model
 from keras import Input, Model
 from keras.layers import Conv2D, BatchNormalization, ReLU, Concatenate, Add, MaxPooling2D, GlobalAveragePooling2D, Dense
 from tensorflow import Tensor
-
 from Model.GroupConv2D import GroupConv2D
 
 
@@ -52,19 +51,20 @@ def stage_1_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
                        kernel_size=kernels[0],
                        groups=groups[0],
                        padding='same')(relu_0)
+
     GC_1 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[1],
                        groups=groups[1],
-
                        padding='same')(relu_0)
+
     GC_2 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[2],
                        groups=groups[2],
                        padding='same')(relu_0)
+
     GC_3 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[3],
                        groups=groups[3],
-
                        padding='same')(relu_0)
     GC_PyConv = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
     BN_1 = BatchNormalization()(GC_PyConv)
@@ -121,11 +121,12 @@ def stage_2_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
                        kernel_size=kernels[0],
                        groups=groups[0],
                        padding='same')(relu_0)
+
     GC_1 = GroupConv2D(out_filters=filters[1],
                        kernel_size=kernels[1],
                        groups=groups[1],
-
                        padding='same')(relu_0)
+
     GC_2 = GroupConv2D(out_filters=filters[2],
                        kernel_size=kernels[2],
                        groups=groups[2],
@@ -186,10 +187,10 @@ def stage_3_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
                        kernel_size=kernels[0],
                        groups=groups[0],
                        padding='same')(relu_0)
+
     GC_1 = GroupConv2D(out_filters=filters[1],
                        kernel_size=kernels[1],
                        groups=groups[1],
-
                        padding='same')(relu_0)
 
     GC_PyConv = Concatenate(axis=-1)([GC_0, GC_1])
