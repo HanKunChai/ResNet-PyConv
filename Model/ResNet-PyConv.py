@@ -3,6 +3,7 @@ from keras.utils import plot_model
 from keras import Input, Model
 from keras.layers import Conv2D, BatchNormalization, ReLU, Concatenate, Add, MaxPooling2D, GlobalAveragePooling2D, Dense
 from tensorflow import Tensor
+
 from Model.GroupConv2D import GroupConv2D
 
 
@@ -50,22 +51,27 @@ def stage_1_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
     GC_0 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[0],
                        groups=groups[0],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_1 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[1],
                        groups=groups[1],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_2 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[2],
                        groups=groups[2],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_3 = GroupConv2D(out_filters=filters,
                        kernel_size=kernels[3],
                        groups=groups[3],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
+
     GC_PyConv = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
     BN_1 = BatchNormalization()(GC_PyConv)
     relu_1 = ReLU()(BN_1)
@@ -120,17 +126,20 @@ def stage_2_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
     GC_0 = GroupConv2D(out_filters=filters[0],
                        kernel_size=kernels[0],
                        groups=groups[0],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_1 = GroupConv2D(out_filters=filters[1],
                        kernel_size=kernels[1],
                        groups=groups[1],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_2 = GroupConv2D(out_filters=filters[2],
                        kernel_size=kernels[2],
                        groups=groups[2],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_PyConv = Concatenate(axis=-1)([GC_0, GC_1, GC_2])
     BN_1 = BatchNormalization()(GC_PyConv)
@@ -186,12 +195,14 @@ def stage_3_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
     GC_0 = GroupConv2D(out_filters=filters[0],
                        kernel_size=kernels[0],
                        groups=groups[0],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_1 = GroupConv2D(out_filters=filters[1],
                        kernel_size=kernels[1],
                        groups=groups[1],
-                       padding='same')(relu_0)
+                       padding='same'
+    )(relu_0)
 
     GC_PyConv = Concatenate(axis=-1)([GC_0, GC_1])
     BN_1 = BatchNormalization()(GC_PyConv)
@@ -274,6 +285,7 @@ def stage_4_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
 def mkstages(input: Tensor):
     input_ = None
     out = None
+
     for i in range(3):
         if i is 0:
             input_ = stage_1_ResBlocK(input=input, initial_block=True)
@@ -307,11 +319,11 @@ def classifiaction_stage(input:Tensor,classes_num:int):
     return softmax
 
 
-def PyResNet():
+def PyResNet(classes_num:int = 1000):
     i = Input((224, 224, 3))
     x = stage_0(i)
     x = mkstages(x)
-    out = classifiaction_stage(x, 1000)
+    out = classifiaction_stage(x, classes_num)
     model = Model(inputs=i, outputs=out)
     return model
 
