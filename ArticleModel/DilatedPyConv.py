@@ -1,7 +1,8 @@
-from keras.layers import Conv2D, GroupConv2D, GlobalAveragePooling2D, Dense, BatchNormalization, ReLU, MaxPooling2D, \
+from keras.layers import Conv2D, GlobalAveragePooling2D, Dense, BatchNormalization, ReLU, MaxPooling2D, \
     Concatenate, Add
 from tensorflow import Tensor
 from keras import Model, Input
+from Model.GroupConv2D import GroupConv2D
 
 
 def stage_0(input_tensor: Tensor):
@@ -28,6 +29,44 @@ def stage_0(input_tensor: Tensor):
 
     assert isinstance(conv_2, Tensor), "type error"
     return conv_2
+
+
+def multipleGroupConv(input: Tensor, groups: [int], dilation_rates: [int], filters: int):
+    outputs = []
+    for i in range(4):
+        outputs.append(GroupConv2D(
+            out_filters=filters,
+            groups=groups[0],
+            padding='same',
+            kernel_size=3,
+            dilation_rate=dilation_rates[0]
+        )(input))
+
+    for i in range(3):
+        outputs.append(GroupConv2D(
+            out_filters=filters,
+            groups=groups[1],
+            padding='same',
+            kernel_size=3,
+            dilation_rate=dilation_rates[1]
+        )(input))
+    for i in range(2):
+        outputs.append(GroupConv2D(
+            out_filters=filters,
+            groups=groups[2],
+            padding='same',
+            kernel_size=3,
+            dilation_rate=dilation_rates[2]
+        )(input))
+    outputs.append(GroupConv2D(
+        kernel_size=3,
+        groups=groups[3],
+        out_filters=filters,
+        dilation_rate=dilation_rates[3]
+    )(input))
+
+    out = Concatenate(axis=-1)(outputs)
+    return out
 
 
 def stage_1_block(input: Tensor, initial_block: bool = False):
@@ -63,40 +102,40 @@ def stage_1_block(input: Tensor, initial_block: bool = False):
 
     # dilated-Py Conv layer
 
-    GC_0 = GroupConv2D(
-        kernel_size=3,
-        out_filters=16,
-        groups=groups[0],
-        padding='same',
-        dilation_rate=dilated_rates[0]
-    )(relu_0)
-
-    GC_1 = GroupConv2D(
-        kernel_size=3,
-        out_filters=16,
-        groups=groups[1],
-        padding='same',
-        dilation_rate=dilated_rates[1]
-    )(relu_0)
-
-    GC_2 = GroupConv2D(
-        kernel_size=3,
-        out_filters=16,
-        groups=groups[2],
-        padding='same',
-        dilation_rate=dilated_rates[2]
-    )(relu_0)
-
-    GC_3 = GroupConv2D(
-        kernel_size=3,
-        out_filters=16,
-        groups=groups[3],
-        padding='same',
-        dilation_rate=dilated_rates[3]
-    )(relu_0)
-
-    py_dilate_con = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
-
+    # GC_0 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=16,
+    #     groups=groups[0],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[0]
+    # )(relu_0)
+    #
+    # GC_1 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=16,
+    #     groups=groups[1],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[1]
+    # )(relu_0)
+    #
+    # GC_2 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=16,
+    #     groups=groups[2],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[2]
+    # )(relu_0)
+    #
+    # GC_3 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=16,
+    #     groups=groups[3],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[3]
+    # )(relu_0)
+    #
+    # py_dilate_con = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
+    py_dilate_con = multipleGroupConv(relu_0, groups=groups, dilation_rates=dilated_rates, filters=16)
     bn_1 = BatchNormalization()(py_dilate_con)
     relu_1 = ReLU()(bn_1)
 
@@ -147,39 +186,40 @@ def stage_2_block(input: Tensor, initial_block: bool = False):
 
     # dilated-Py Conv layer
 
-    GC_0 = GroupConv2D(
-        kernel_size=3,
-        out_filters=32,
-        groups=groups[0],
-        padding='same',
-        dilation_rate=dilated_rates[0]
-    )(relu_0)
-
-    GC_1 = GroupConv2D(
-        kernel_size=3,
-        out_filters=32,
-        groups=groups[1],
-        padding='same',
-        dilation_rate=dilated_rates[1]
-    )(relu_0)
-
-    GC_2 = GroupConv2D(
-        kernel_size=3,
-        out_filters=32,
-        groups=groups[2],
-        padding='same',
-        dilation_rate=dilated_rates[2]
-    )(relu_0)
-
-    GC_3 = GroupConv2D(
-        kernel_size=3,
-        out_filters=32,
-        groups=groups[3],
-        padding='same',
-        dilation_rate=dilated_rates[3]
-    )(relu_0)
-
-    py_dilate_con = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
+    # GC_0 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=32,
+    #     groups=groups[0],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[0]
+    # )(relu_0)
+    #
+    # GC_1 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=32,
+    #     groups=groups[1],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[1]
+    # )(relu_0)
+    #
+    # GC_2 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=32,
+    #     groups=groups[2],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[2]
+    # )(relu_0)
+    #
+    # GC_3 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=32,
+    #     groups=groups[3],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[3]
+    # )(relu_0)
+    #
+    # py_dilate_con = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
+    py_dilate_con = multipleGroupConv(relu_0, groups=groups, dilation_rates=dilated_rates, filters=32)
 
     bn_1 = BatchNormalization()(py_dilate_con)
     relu_1 = ReLU()(bn_1)
@@ -231,39 +271,40 @@ def stage_3_block(input: Tensor, initial_block: bool = False):
 
     # dilated-Py Conv layer
 
-    GC_0 = GroupConv2D(
-        kernel_size=3,
-        out_filters=64,
-        groups=groups[0],
-        padding='same',
-        dilation_rate=dilated_rates[0]
-    )(relu_0)
-
-    GC_1 = GroupConv2D(
-        kernel_size=3,
-        out_filters=64,
-        groups=groups[1],
-        padding='same',
-        dilation_rate=dilated_rates[1]
-    )(relu_0)
-
-    GC_2 = GroupConv2D(
-        kernel_size=3,
-        out_filters=64,
-        groups=groups[2],
-        padding='same',
-        dilation_rate=dilated_rates[2]
-    )(relu_0)
-
-    GC_3 = GroupConv2D(
-        kernel_size=3,
-        out_filters=64,
-        groups=groups[3],
-        padding='same',
-        dilation_rate=dilated_rates[3]
-    )(relu_0)
-
-    py_dilate_con = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
+    # GC_0 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=64,
+    #     groups=groups[0],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[0]
+    # )(relu_0)
+    #
+    # GC_1 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=64,
+    #     groups=groups[1],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[1]
+    # )(relu_0)
+    #
+    # GC_2 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=64,
+    #     groups=groups[2],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[2]
+    # )(relu_0)
+    #
+    # GC_3 = GroupConv2D(
+    #     kernel_size=3,
+    #     out_filters=64,
+    #     groups=groups[3],
+    #     padding='same',
+    #     dilation_rate=dilated_rates[3]
+    # )(relu_0)
+    #
+    # py_dilate_con = Concatenate(axis=-1)([GC_0, GC_1, GC_2, GC_3])
+    py_dilate_con = multipleGroupConv(relu_0, groups=groups, dilation_rates=dilated_rates, filters=64)
 
     bn_1 = BatchNormalization()(py_dilate_con)
     relu_1 = ReLU()(bn_1)
@@ -335,11 +376,11 @@ def stage_4_block(input: Tensor, initial_block: bool = False):
     return output
 
 
-def DilatedPyConvModel(input_shape=(224, 224, 224), classes_num=1000):
+def DilatedPyConvModel(input_shape=(224, 224, 3), classes_num=6):
     input_layer = Input(input_shape)
     Stage_0 = stage_0(input_layer)
     out = None
-    input_ =None
+    input_ = None
     for i in range(3):
         if i is 0:
             input_ = stage_1_block(input=Stage_0, initial_block=True)
@@ -364,9 +405,9 @@ def DilatedPyConvModel(input_shape=(224, 224, 224), classes_num=1000):
             input_ = stage_4_block(input=input_)
 
     GAP = GlobalAveragePooling2D()(out)
-    classification = Dense(name='softmax',activation='softmax',units=classes_num)(GAP)
+    classification = Dense(name='softmax', activation='softmax', units=classes_num)(GAP)
 
-    model = Model(inputs = input_layer,outputs = classification)
+    model = Model(inputs=input_layer, outputs=classification)
     return model
 
 
