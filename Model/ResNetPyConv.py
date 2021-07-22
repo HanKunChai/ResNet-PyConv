@@ -4,6 +4,7 @@ from keras import Input, Model
 from keras.layers import Conv2D, BatchNormalization, ReLU, Concatenate, Add, MaxPooling2D, GlobalAveragePooling2D, Dense
 from tensorflow import Tensor
 
+from Attention.AttentionModule import CBAM, SENet
 from Model.GroupConv2D import GroupConv2D
 
 
@@ -20,7 +21,8 @@ def stage_0(input: Tensor):
     return RL00
 
 
-def stage_1_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False
+def stage_1_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False,
+                     cbam: bool = False, reduction: int = 16, senet: bool = False
                      ):
     if kernels is None:
         kernels = [9, 7, 5, 3]
@@ -90,12 +92,17 @@ def stage_1_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
         x = BatchNormalization()(x)
     else:
         x = input
-
+    if cbam:
+        conv_1 = CBAM(conv_1, reduction=reduction)
+        senet = False
+    if senet:
+        conv_1 = SENet(conv_1, reduction=reduction)
     out = Add()([conv_1, x])
     return out
 
 
-def stage_2_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False
+def stage_2_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False,
+                     cbam: bool = False, reduction: int = 16, senet: bool = False
                      ):
     if kernels is None:
         kernels = [7, 5, 3]
@@ -159,12 +166,17 @@ def stage_2_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
         x = BatchNormalization()(x)
     else:
         x = input
-
+    if cbam:
+        conv_1 = CBAM(conv_1, reduction=reduction)
+        senet = False
+    if senet:
+        conv_1 = SENet(conv_1, reduction=reduction)
     out = Add()([conv_1, x])
     return out
 
 
-def stage_3_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False
+def stage_3_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False,
+                     cbam: bool = False, reduction: int = 16, senet: bool = False
                      ):
     if kernels is None:
         kernels = [5, 3]
@@ -222,19 +234,19 @@ def stage_3_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
         x = BatchNormalization()(x)
     else:
         x = input
-
+    if cbam:
+        conv_1 = CBAM(conv_1, reduction=reduction)
+        senet = False
+    if senet:
+        conv_1 = SENet(conv_1, reduction=reduction)
     out = Add()([conv_1, x])
     return out
 
 
-def stage_4_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, initial_block: bool = False
+def stage_4_ResBlocK(input: Tensor, initial_block: bool = False,
+                     cbam: bool = False, reduction: int = 16, senet: bool = False
                      ):
-    if kernels is None:
-        kernels = 3
-    if filters is None:
-        filters = 512
-    if groups is None:
-        groups = 1
+
 
     if initial_block:
         # Move the DownSample to the first block of each stage
@@ -277,37 +289,51 @@ def stage_4_ResBlocK(input: Tensor, kernels=None, groups=None, filters=None, ini
         x = BatchNormalization()(x)
     else:
         x = input
-
+    if cbam:
+        conv_1 = CBAM(conv_1, reduction=reduction)
+        senet = False
+    if senet:
+        conv_1 = SENet(conv_1, reduction=reduction)
     out = Add()([conv_1, x])
     return out
 
 
-def mkstages(input: Tensor):
+def mkstages(input: Tensor,
+                     cbam: bool = False, reduction: int = 16, senet: bool = False):
     input_ = None
     out = None
 
     for i in range(3):
         if i is 0:
-            input_ = stage_1_ResBlocK(input=input, initial_block=True)
+            input_ = stage_1_ResBlocK(input=input, initial_block=True,
+                     cbam = cbam, reduction = reduction, senet = senet)
         else:
-            input_ = stage_1_ResBlocK(input=input_)
+            input_ = stage_1_ResBlocK(input=input_,
+                     cbam = cbam, reduction = reduction, senet = senet)
     for i in range(4):
         if i is 0:
-            input_ = stage_2_ResBlocK(input=input_, initial_block=True)
+            input_ = stage_2_ResBlocK(input=input_, initial_block=True,
+                     cbam = cbam, reduction = reduction, senet = senet)
         else:
-            input_ = stage_2_ResBlocK(input=input_)
+            input_ = stage_2_ResBlocK(input=input_,
+                     cbam = cbam, reduction = reduction, senet = senet)
     for i in range(6):
         if i is 0:
-            input_ = stage_3_ResBlocK(input=input_, initial_block=True)
+            input_ = stage_3_ResBlocK(input=input_, initial_block=True,
+                     cbam = cbam, reduction = reduction, senet = senet)
         else:
-            input_ = stage_3_ResBlocK(input=input_)
+            input_ = stage_3_ResBlocK(input=input_,
+                     cbam = cbam, reduction = reduction, senet = senet)
     for i in range(3):
         if i is 0:
-            input_ = stage_4_ResBlocK(input=input_, initial_block=True)
+            input_ = stage_4_ResBlocK(input=input_, initial_block=True,
+                     cbam = cbam, reduction = reduction, senet = senet)
         elif i is 2:
-            out = stage_4_ResBlocK(input=input_)
+            out = stage_4_ResBlocK(input=input_,
+                     cbam = cbam, reduction = reduction, senet = senet)
         else:
-            input_ = stage_4_ResBlocK(input=input_)
+            input_ = stage_4_ResBlocK(input=input_,
+                     cbam = cbam, reduction = reduction, senet = senet)
     assert out is not None, 'Something wrong'
 
     return out
@@ -319,10 +345,12 @@ def classifiaction_stage(input:Tensor,classes_num:int):
     return softmax
 
 
-def PyResNet(classes_num:int = 1000):
+def PyResNet(classes_num:int = 1000,
+             cbam: bool = False, reduction: int = 16, senet: bool = False):
     i = Input((224, 224, 3))
     x = stage_0(i)
-    x = mkstages(x)
+    x = mkstages(x,
+                     cbam = cbam, reduction = reduction, senet = senet)
     out = classifiaction_stage(x, classes_num)
     model = Model(inputs=i, outputs=out)
     return model

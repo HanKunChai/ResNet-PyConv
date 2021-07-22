@@ -46,7 +46,7 @@ class GroupConv2D(Layer):
             new_h = math.ceil((h - self.kernel_size + 1) / self.strides)
             new_w = math.ceil((w - self.kernel_size + 1) / self.strides)
 
-        return (b, new_h, new_w, self.out_filters)
+        return b, new_h, new_w, self.out_filters
 
     def get_config(self):
         config = {
