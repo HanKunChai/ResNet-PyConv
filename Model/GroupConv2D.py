@@ -7,7 +7,7 @@ from keras import initializers, regularizers
 
 class GroupConv2D(Layer):
     def __init__(self, out_filters, kernel_size, dilation_rate=(1, 1), strides=1, use_bias=False, padding='same',
-                 kernel_initializer='glorot_uniform', kernel_regularizer=None, groups=32, **kwargs):
+                 kernel_initializer='he_normal', kernel_regularizer=None, groups=32, **kwargs):
         super(GroupConv2D, self).__init__(**kwargs)
         self.out_filters = out_filters
         self.kernel_size = kernel_size

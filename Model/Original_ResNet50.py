@@ -2,7 +2,7 @@ from keras import Model
 from keras.layers import Add, Conv2D, MaxPooling2D, GlobalAveragePooling2D, ReLU, BatchNormalization, Input, \
     Dense
 from tensorflow import Tensor
-
+from keras.initializers import he_normal
 from Attention.AttentionModule import SENet, CBAM
 
 
@@ -11,7 +11,8 @@ def stage_0(inputs: Tensor):
         kernel_size=7,
         padding='same',
         strides=2,
-        filters=64
+        filters=64,
+        kernel_initializer=he_normal()
     )(inputs)
     x = BatchNormalization()(x)
     x = ReLU()(x)
@@ -27,12 +28,14 @@ def Stage_1_1st_ResBlock(inputs: Tensor, cbam: bool = False, reduction: int = 16
     add_1 = Conv2D(
         filters=64,
         kernel_size=1,
-        padding='same'
+        padding='same',
+        kernel_initializer=he_normal()
     )(inputs)
     add_2 = Conv2D(
         filters=64 * 4,
         kernel_size=1,
-        padding='same'
+        padding='same',
+        kernel_initializer=he_normal()
     )(inputs)
 
     add_1 = BatchNormalization()(add_1)
@@ -41,7 +44,8 @@ def Stage_1_1st_ResBlock(inputs: Tensor, cbam: bool = False, reduction: int = 16
     add_1 = Conv2D(
         kernel_size=3,
         filters=64,
-        padding='same'
+        padding='same',
+        kernel_initializer=he_normal()
     )(add_1)
     add_1 = BatchNormalization()(add_1)
     add_1 = ReLU()(add_1)
@@ -49,7 +53,8 @@ def Stage_1_1st_ResBlock(inputs: Tensor, cbam: bool = False, reduction: int = 16
     add_1 = Conv2D(
         kernel_size=1,
         filters=256,
-        padding='same'
+        padding='same',
+        kernel_initializer=he_normal()
     )(add_1)
     add_1 = BatchNormalization()(add_1)
 
@@ -72,20 +77,23 @@ def ResBlock(inputs: Tensor, filters: int, initial_block: bool = False, cbam: bo
             kernel_size=1,
             padding='same',
             filters=filters,
-            strides=2
+            strides=2,
+            kernel_initializer=he_normal()
         )(inputs)
         add_2 = Conv2D(
             kernel_size=1,
             padding='same',
             filters=filters * 4,
-            strides=2
+            strides=2,
+            kernel_initializer=he_normal()
         )(inputs)
     else:
         add_1 = Conv2D(
             kernel_size=1,
             padding='same',
             filters=filters,
-            strides=1
+            strides=1,
+            kernel_initializer=he_normal()
         )(inputs)
         add_2 = inputs
 
@@ -95,7 +103,8 @@ def ResBlock(inputs: Tensor, filters: int, initial_block: bool = False, cbam: bo
     add_1 = Conv2D(
         kernel_size=3,
         filters=filters,
-        padding='same'
+        padding='same',
+        kernel_initializer=he_normal()
     )(add_1)
     add_1 = BatchNormalization()(add_1)
     add_1 = ReLU()(add_1)
@@ -103,7 +112,8 @@ def ResBlock(inputs: Tensor, filters: int, initial_block: bool = False, cbam: bo
     add_1 = Conv2D(
         kernel_size=1,
         filters=filters * 4,
-        padding='same'
+        padding='same',
+        kernel_initializer=he_normal()
     )(add_1)
 
     add_1 = BatchNormalization()(add_1)
